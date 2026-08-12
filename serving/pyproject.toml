@@ -1,0 +1,17 @@
+[project]
+name = "muse-glimmer-serving"
+version = "0.1.0"
+description = "Isolated sglang environment for serving Muse-Glimmer-30B during data regeneration"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "Apache-2.0" }
+dependencies = [
+    # sglang manages its own torch/transformers pins (torch 2.8.x). It must stay
+    # isolated from the main project env, which needs torch 2.9.1 +
+    # transformers>=5.15 for Muse-Glimmer drafter training.
+    "sglang[all]",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

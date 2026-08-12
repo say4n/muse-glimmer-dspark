@@ -1,9 +1,13 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Requires SGLang to be installed separately (not in requirements.txt):
-#   pip install "sglang[all]"
-# See https://docs.sglang.ai/get_started/install.html for details.
+# sglang lives in the isolated `serving/` uv environment (it pins torch 2.8.x,
+# conflicting with the main project's torch 2.9.1 / transformers>=5.15).
+# Setup on a Linux/CUDA box:
+#   uv sync --project serving
+# Then launch with:
+#   uv run --project serving bash scripts/data/launch_sglang_server.sh
+# See serving/README.md.
 
 # One sglang worker per GPU. On Colab (single GPU) use: NUM_WORKERS=1.
 model_path=${MODEL_PATH:-meta-models/Muse-Glimmer-30B}
