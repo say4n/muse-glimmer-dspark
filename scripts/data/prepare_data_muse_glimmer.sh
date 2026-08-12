@@ -13,7 +13,8 @@ train_data_path=train_datasets/muse_glimmer_30b/perfectblend_train_regen.jsonl
 cache_dir=${HOME}/.cache/deepspec/muse_glimmer_30b_target_cache
 
 server_host=127.0.0.1
-num_workers=8
+# One sglang worker per GPU. Set NUM_WORKERS to match your GPUs (Colab: 1).
+num_workers=${NUM_WORKERS:-8}
 start_port=30000
 concurrency=32
 temperature=0.7

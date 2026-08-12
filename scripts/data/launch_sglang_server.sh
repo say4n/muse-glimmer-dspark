@@ -5,14 +5,15 @@ set -euo pipefail
 #   pip install "sglang[all]"
 # See https://docs.sglang.ai/get_started/install.html for details.
 
-model_path=Qwen/Qwen3-4B
-num_workers=8
-start_port=30000
-start_nccl_port=31000
+# One sglang worker per GPU. On Colab (single GPU) use: NUM_WORKERS=1.
+model_path=${MODEL_PATH:-meta-models/Muse-Glimmer-30B}
+num_workers=${NUM_WORKERS:-8}
+start_port=${START_PORT:-30000}
+start_nccl_port=${START_NCCL_PORT:-31000}
 host=0.0.0.0
 dtype=bfloat16
-mem_frac=0.9
-log_dir=logs/sglang_qwen3_4b
+mem_frac=${MEM_FRAC:-0.9}
+log_dir=logs/sglang_$(basename "${model_path}")
 heartbeat_interval=300
 
 get_host_ip() {
