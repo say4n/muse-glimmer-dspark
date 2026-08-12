@@ -1,0 +1,45 @@
+[project]
+name = "muse-glimmer-dspark"
+version = "0.1.0"
+description = "DSpark speculative drafter for Meta Muse-Glimmer-30B (fork of DeepSeek's DeepSpec DSpark pipeline)"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "Apache-2.0" }
+authors = [{ name = "muse-glimmer-dspark contributors" }]
+dependencies = [
+    # CUDA build of torch: install the wheel that matches your machine.
+    # On a Mac (CPU), the default PyPI wheel is used automatically.
+    "torch==2.9.1",
+    # Muse-Glimmer was released against transformers 5.15.0.dev0. The
+    # muse_glimmer modeling/configuration modules ship in 5.15+.
+    "transformers>=5.15",
+    "numpy==2.4.4",
+    "PyYAML==6.0.3",
+    "tqdm==4.67.3",
+    "tensorboard==2.20.0",
+    "matplotlib==3.10.9",
+    # flex_attention (used by the DSpark training loop) requires triton,
+    # which is only shipped for Linux + CUDA.
+    "triton==3.5.1; sys_platform == 'linux'",
+    "typing_extensions==4.15.0",
+    "sentencepiece==0.2.1",
+    "safetensors>=0.8.0",
+    "prettytable==3.17.0",
+]
+
+[project.optional-dependencies]
+# Data preparation dependencies (regenerating answers with sglang).
+data = [
+    "datasets==4.8.5",
+    "openai==2.6.1",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.uv]
+package = true
+
+[tool.hatch.build.targets.wheel]
+packages = ["deepspec"]

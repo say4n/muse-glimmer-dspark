@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+
+# Training artifacts
+checkpoints/
+tensorboard/
+train_datasets/
+*.error.jsonl
+
+# Model caches
+*.safetensors
+
+# Editors / OS
+.DS_Store
+.idea/
+.vscode/
