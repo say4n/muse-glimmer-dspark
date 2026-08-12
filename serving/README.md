@@ -1,8 +1,10 @@
 # Serving environment
 
 `sglang` pins `torch==2.8.0`, which conflicts with the main project's
-`torch==2.9.1` + `transformers>=5.15`. This sub-project keeps sglang in its
-own uv environment and lockfile so the two never clobber each other.
+`torch==2.9.1` + `transformers>=5.15`. This sub-project is excluded from the
+root workspace (`[tool.uv.workspace] exclude = ["serving"]` in the root
+`pyproject.toml`), so it resolves its own uv environment and lockfile and the
+two never clobber each other.
 
 ```bash
 # Create the isolated env + lockfile

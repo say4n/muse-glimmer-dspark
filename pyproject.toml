@@ -41,5 +41,12 @@ build-backend = "hatchling.build"
 [tool.uv]
 package = true
 
+# serving/ is an isolated sglang environment (it pins torch 2.8.x, conflicting
+# with this project's torch 2.9.1 / transformers>=5.15). Exclude it from the
+# root workspace so it resolves its own lockfile + venv. Manage it with:
+#   uv sync --project serving
+[tool.uv.workspace]
+exclude = ["serving"]
+
 [tool.hatch.build.targets.wheel]
 packages = ["deepspec"]
