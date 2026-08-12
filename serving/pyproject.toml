@@ -15,3 +15,8 @@ dependencies = [
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+# This project is a dependency container only (no Python package to ship), so
+# uv treats it as a virtual project and skips building a wheel.
+[tool.uv]
+package = false
