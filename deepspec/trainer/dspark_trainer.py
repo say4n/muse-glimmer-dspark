@@ -1,3 +1,5 @@
+from transformers import AutoConfig, AutoTokenizer
+
 from deepspec.data import CacheCollator
 from deepspec.modeling.dspark.gemma4 import Gemma4DSparkModel
 from deepspec.modeling.dspark.gemma4.config import (
@@ -59,3 +61,40 @@ class MuseGlimmerDSparkTrainer(Qwen3DSparkTrainer):
             model_args=model_args,
         )
         return MuseGlimmerDSparkModel(draft_config)
+
+    def build_models(self):
+        # The Muse-Glimmer target is a multimodal model
+        # (MuseGlimmerForConditionalGeneration), not an AutoModelForCausalLM.
+        # We only need its text embeddings + LM head to initialize the frozen
+        # drafter copies.
+        from transformers.models.muse_glimmer import MuseGlimmerForConditionalGeneration
+
+        model_args = self.args.model
+
+        tokenizer = AutoTokenizer.from_pretrained(
+            model_args.target_model_name_or_path,
+        )
+        target_config = AutoConfig.from_pretrained(
+            model_args.target_model_name_or_path,
+        )
+
+        draft_model = self._build_draft_model(
+            target_config=target_config,
+            model_args=model_args,
+        )
+        draft_model = draft_model.to(device=self.device, dtype=self.precision_dtype)
+
+        target_model = MuseGlimmerForConditionalGeneration.from_pretrained(
+            model_args.target_model_name_or_path,
+            dtype=self.precision_dtype,
+        ).to(device="cpu").eval()
+        target_embed_tokens = target_model.get_input_embeddings()
+        target_lm_head = target_model.get_output_embeddings()
+        assert (target_lm_head is not None) and (target_embed_tokens is not None)
+        draft_model.initialize_embeddings_and_head(
+            embed_tokens=target_embed_tokens,
+            lm_head=target_lm_head,
+            freeze=True,
+        )
+        del target_model
+        return draft_model, tokenizer
