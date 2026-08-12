@@ -111,6 +111,9 @@ for ((gpu_id = 0; gpu_id < num_workers; gpu_id++)); do
         --nccl-port "${nccl_port}" \
         --dtype "${dtype}" \
         --mem-fraction-static "${mem_frac}" \
+        --language-model-only \
+        --reasoning-parser muse \
+        --tool-call-parser muse \
         "$@" > "${log_file}" 2>&1 &
     pids+=("$!")
     ports+=("${port}")

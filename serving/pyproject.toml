@@ -6,10 +6,16 @@ readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "Apache-2.0" }
 dependencies = [
-    # sglang manages its own torch/transformers pins (torch 2.8.x). It must stay
-    # isolated from the main project env, which needs torch 2.9.1 +
-    # transformers>=5.15 for Muse-Glimmer drafter training.
-    "sglang[all]",
+    # sglang manages its own torch/transformers pins (torch 2.13 / transformers
+    # 5.12.1). It must stay isolated from the main project env, which needs
+    # torch 2.9.1 + transformers>=5.15 for Muse-Glimmer drafter training.
+    #
+    # PyPI's latest release (0.5.17) predates muse_glimmer support — it was
+    # added as day-0 in sglang main (sglang vendors its own MuseGlimmerConfig,
+    # so it registers the model type itself regardless of transformers version).
+    # Pull from git main (the Python package lives under the python/ subdir).
+    # https://www.lmsys.org/blog/2026-08-10-meta-muse-glimmer
+    "sglang[all] @ git+https://github.com/sgl-project/sglang.git#subdirectory=python",
 ]
 
 [build-system]
