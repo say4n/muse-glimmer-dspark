@@ -16,7 +16,7 @@ export WORLD_SIZE=${WORLD_SIZE:-1}
 
 cache_dir=${cache_dir:-${HOME}/muse-glimmer-dspark/cache_val}
 
-PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True uv run python train.py \
+PYTORCH_ALLOC_CONF=expandable_segments:True uv run python train.py \
     --config config/dspark/dspark_muse_glimmer_30b.py \
     --opts "data.target_cache_path=${cache_dir}" \
     --opts "train.global_batch_size=8" \

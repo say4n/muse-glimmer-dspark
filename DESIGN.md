@@ -152,9 +152,13 @@ targets. For Muse-Glimmer (H=6656, 5 target layers) a 4096-token sample needs
 - [x] Training path smoke-tested on CPU (eager mask): DSpark loss computed and
       gradients flow to backbone/markov/confidence heads; embeddings frozen.
 - [x] End-to-end validation on GPU (RTX PRO 6000 Blackwell, 96GB): target
-      cache built from 500 samples, drafter trained (loss 11.1 → 2.61 over 120
-      steps), checkpoint saved, speculative eval ran (gsm8k smoke, acceptance
-      length ~1.06 at the tiny training budget).
+      cache built from a 500-sample slice, drafter trained (loss 11.1 → 2.61
+      over 120 steps), checkpoint saved, and speculative eval ran on gsm8k /
+      math500 / aime25 smoke slices. Acceptance length ~1.03-1.06 and verify
+      rate ~0.11-0.12 — as expected for a near-untrained drafter, but the
+      pipeline (data → cache → train → checkpoint → eval) is confirmed
+      end-to-end. The confidence head shows better-than-random AUC, so the
+      DSpark scheduling mechanism is learning.
 
 ## Operational notes (from a full GPU run)
 
@@ -171,10 +175,11 @@ targets. For Muse-Glimmer (H=6656, 5 target layers) a 4096-token sample needs
    live at once. The `BF16Optimizer` also keeps fp32 master + Adam states
    (~14B/param). Budget ~48GB for weights+optimizer plus activations/loss.
    `scripts/train/train_val_slice.sh` uses `num_anchors=8, block_size=8` and
-   `PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True` (avoids allocator
+   `PYTORCH_ALLOC_CONF=expandable_segments:True` (avoids allocator
    fragmentation that OOMs the backward pass even with nominally free VRAM).
-   Note: the env var is `PYTORCH_CUDA_ALLOC_CONF` in torch 2.9 (the older
-   `PYTORCH_CUDA_ALLOC_CONF` spelling logs a deprecation warning).
+   In torch 2.9 the variable is `PYTORCH_ALLOC_CONF`; the older
+   `PYTORCH_CUDA_ALLOC_CONF` spelling still works but logs a deprecation
+   warning.
 3. **Checkpoints can fill a small disk.** The saved optimizer state (fp32
    master + Adam moments) is ~32GB for this drafter on top of the ~11GB model.
    Set `train.include_optimizer_state=False` for validation runs — eval only
