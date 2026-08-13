@@ -6,13 +6,15 @@
 #   1. bash scripts/data/prepare_10k.sh --regen   # full flow
 #   2. bash scripts/data/prepare_10k.sh           # skip regen (raw perfectblend)
 #
-# Env: NUM_WORKERS (sglang workers, default 1), REPO_DIR, DATA_ROOT.
+# Env: NUM_WORKERS (sglang workers, default 1), REPO_DIR, DATA_ROOT,
+#      MAX_LENGTH (cache token cap; cache size scales ~linearly with this).
 set -euo pipefail
 
 REPO_DIR=${REPO_DIR:-/workspace/muse-glimmer-dspark}
 DATA_ROOT=${DATA_ROOT:-${REPO_DIR}/train_datasets}
 NUM_SAMPLES=${NUM_SAMPLES:-10000}
 NUM_WORKERS=${NUM_WORKERS:-1}
+MAX_LENGTH=${MAX_LENGTH:-4096}
 DO_REGEN=0
 if [[ "${1:-}" == "--regen" ]]; then
     DO_REGEN=1
@@ -66,13 +68,14 @@ else
 fi
 
 # --- 4. target cache ---
-cache_dir="${DATA_ROOT}/cache_slice_${NUM_SAMPLES}"
+cache_dir="${DATA_ROOT}/cache_slice_${NUM_SAMPLES}_len${MAX_LENGTH}"
 uv run python scripts/data/prepare_target_cache.py \
     --config config/dspark/dspark_muse_glimmer_30b.py \
     --train-data-path "${train_path}" \
     --output-dir "${cache_dir}" \
     --local-batch-size 4 \
-    --num-workers 2
+    --num-workers 2 \
+    --opts "data.max_length=${MAX_LENGTH}"
 
 echo "Done. Cache at: ${cache_dir}"
 echo "Train with: bash scripts/train/train_slice.sh --cache ${cache_dir}"
