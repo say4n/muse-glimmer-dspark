@@ -151,9 +151,40 @@ targets. For Muse-Glimmer (H=6656, 5 target layers) a 4096-token sample needs
       `sample_draft_tokens` + `predict_confidence_step` with a DynamicCache.
 - [x] Training path smoke-tested on CPU (eager mask): DSpark loss computed and
       gradients flow to backbone/markov/confidence heads; embeddings frozen.
-- [ ] flex_attention training forward on CUDA (requires GPU + triton).
-- [ ] Real target-cache generation, training run, and eval — requires the
-      multi-GPU workstation.
+- [x] End-to-end validation on GPU (RTX PRO 6000 Blackwell, 96GB): target
+      cache built from 500 samples, drafter trained (loss 11.1 → 2.61 over 120
+      steps), checkpoint saved, speculative eval ran (gsm8k smoke, acceptance
+      length ~1.06 at the tiny training budget).
+
+## Operational notes (from a full GPU run)
+
+1. **sglang must come from git `main`**, not PyPI. PyPI 0.5.17 predates the
+   `muse_glimmer` backend (day-0 in sglang main). sglang main also requires a
+   Rust toolchain to build its custom ops. `scripts/setup.sh` installs
+   uv + rust and syncs both environments. Launch with
+   `--language-model-only --reasoning-parser muse --tool-call-parser muse`
+   (see `scripts/data/launch_sglang_server.sh`).
+2. **Drafter training is VRAM-heavy.** The DSpark loss materialises fp32
+   tensors over the full 202k vocab: per tensor that is
+   `num_anchors * block_size * 202048 * 4 bytes`. With
+   `num_anchors=512, block_size=16` that is ~6.6GB per tensor and several are
+   live at once. The `BF16Optimizer` also keeps fp32 master + Adam states
+   (~14B/param). Budget ~48GB for weights+optimizer plus activations/loss.
+   `scripts/train/train_val_slice.sh` uses `num_anchors=8, block_size=8` and
+   `PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True` (avoids allocator
+   fragmentation that OOMs the backward pass even with nominally free VRAM).
+   Note: the env var is `PYTORCH_CUDA_ALLOC_CONF` in torch 2.9 (the older
+   `PYTORCH_CUDA_ALLOC_CONF` spelling logs a deprecation warning).
+3. **Checkpoints can fill a small disk.** The saved optimizer state (fp32
+   master + Adam moments) is ~32GB for this drafter on top of the ~11GB model.
+   Set `train.include_optimizer_state=False` for validation runs — eval only
+   needs `config.json` + `model.safetensors`. (If this flag is missing from
+   your config, add it first; `--opts` rejects unknown keys.)
+4. **Distributed init** needs explicit `MASTER_ADDR`/`MASTER_PORT`/`RANK`/
+   `WORLD_SIZE` on some hosts (the default TCPStore bind can fail).
+5. **Eval is batch=1 by design** (`generate_decoding_sample` asserts bsz=1),
+   so GPU utilization is low and throughput is latency-bound. Use
+   `--max-samples N` to smoke-test quickly; ~10-20s per sample.
 
 ## Out of scope (for now)
 
