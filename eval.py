@@ -47,8 +47,19 @@ def parse_args():
     parser.add_argument("--tensorboard-dir", type=str, default=None)
     parser.add_argument("--step", type=int, default=None,help=("step for tensorboard logging"),)
     parser.add_argument("--seed", type=int, default=980406)
+    parser.add_argument(
+        "--max-samples",
+        type=int,
+        default=None,
+        help="Cap every eval task to this many samples (for quick smoke runs).",
+    )
     args = parser.parse_args()
     args.tasks = list(TASKS)
+    if args.max_samples is not None:
+        args.tasks = [
+            (dataset, min(max_samples, args.max_samples))
+            for dataset, max_samples in args.tasks
+        ]
     return args
 
 
