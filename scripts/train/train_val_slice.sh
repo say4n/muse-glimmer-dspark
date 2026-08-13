@@ -17,5 +17,6 @@ PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True uv run python train.py \
     --opts "train.num_train_epochs=2" \
     --opts "logging.checkpointing_steps=50" \
     --opts "train.torch_compile=False" \
+    --opts "train.include_optimizer_state=False" \
     --opts "model.num_anchors=8" \
     --opts "model.block_size=8"

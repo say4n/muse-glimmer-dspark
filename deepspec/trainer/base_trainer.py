@@ -328,6 +328,9 @@ class BaseTrainer:
             global_rank=self.global_rank,
             world_size=self.world_size,
             local_batch_size=int(self.args.train.local_batch_size),
+            include_optimizer_state=bool(
+                getattr(self.args.train, "include_optimizer_state", True)
+            ),
         )
 
     def save_and_eval_checkpoint(self):

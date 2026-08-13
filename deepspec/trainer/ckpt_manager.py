@@ -95,7 +95,8 @@ def load_training_state(
     assert os.path.exists(state_path)
 
     checkpoint = torch.load(state_path, map_location="cpu", weights_only=False)
-    optimizer.load_state_dict(checkpoint["optimizer"])
+    if checkpoint.get("optimizer") is not None:
+        optimizer.load_state_dict(checkpoint["optimizer"])
 
     next_micro_step = int(checkpoint["next_micro_step"])
     assert next_micro_step % gradient_accumulation_steps == 0, (
@@ -145,6 +146,7 @@ def save_checkpoint(
     global_rank: int,
     world_size: int,
     local_batch_size: int,
+    include_optimizer_state: bool = True,
 ) -> str:
     assert next_micro_step % gradient_accumulation_steps == 0, (
         "next_micro_step must be aligned with gradient_accumulation_steps at "
@@ -169,6 +171,7 @@ def save_checkpoint(
         global_rank=global_rank,
         world_size=world_size,
         local_batch_size=local_batch_size,
+        include_optimizer_state=include_optimizer_state,
     )
     torch.save(
         training_state,
@@ -200,15 +203,15 @@ def _serialize_training_state(
     global_rank: int,
     world_size: int,
     local_batch_size: int,
+    include_optimizer_state: bool = True,
 ):
     assert next_micro_step % gradient_accumulation_steps == 0, (
         "next_micro_step must be aligned with gradient_accumulation_steps at "
         f"checkpoint time: next_micro_step={next_micro_step}, "
         f"gradient_accumulation_steps={gradient_accumulation_steps}"
     )
-    return {
+    state = {
         "next_micro_step": int(next_micro_step),
-        "optimizer": optimizer.state_dict(),
         "global_rank": int(global_rank),
         "world_size": int(world_size),
         "local_batch_size": int(local_batch_size),
@@ -217,6 +220,13 @@ def _serialize_training_state(
         "numpy_rng": np.random.get_state(),
         "python_rng": random.getstate(),
     }
+    # The optimizer state (fp32 master weights + Adam moments) is only needed
+    # to resume training. Omit it for cheap validation checkpoints.
+    if include_optimizer_state:
+        state["optimizer"] = optimizer.state_dict()
+    else:
+        state["optimizer"] = None
+    return state
 
 
 def _full_model_state_dict(model):
