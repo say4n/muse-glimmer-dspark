@@ -48,6 +48,10 @@ train = dict(
     max_grad_norm=1.0,
     sharding_strategy="no_shard",
     torch_compile=False,
+    # Omit the fp32 optimizer state (master weights + Adam moments) from
+    # checkpoints. Only needed for resume; skipping it makes checkpoints ~3x
+    # smaller for the Muse-Glimmer drafter. Set True to enable resuming.
+    include_optimizer_state=True,
 )
 
 logging = dict(
