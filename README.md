@@ -15,9 +15,14 @@ This is a fork of [deepseek-ai/DeepSpec](https://github.com/deepseek-ai/DeepSpec
 
 ## Setup
 
+On a fresh GPU box (Linux/CUDA):
+
 ```bash
-uv sync --extra data          # installs transformers>=5.15, torch, etc.
+bash scripts/setup.sh     # installs uv + rust, syncs main + sglang envs
 ```
+
+This handles the two gotchas: sglang must come from git `main` (PyPI predates
+the `muse_glimmer` backend) and needs a Rust toolchain to build its custom ops.
 
 Training requires a CUDA build of torch (the default PyPI wheel works on Linux;
 adjust if your box needs a different wheel). flex_attention (triton) is used
@@ -35,6 +40,19 @@ bash scripts/train/train.sh
 # 3. Evaluate speculative-decoding acceptance
 bash scripts/eval/eval.sh
 ```
+
+For a quick single-GPU validation of the whole loop, use
+`scripts/train/train_val_slice.sh` (small anchors/block + no optimizer state in
+checkpoints) and pass `--max-samples 10` to `eval.py`.
+
+> **Rebuilding after VM shutdown.** GPU instances are ephemeral: the target
+> cache, regenerated training data, checkpoints, and eval outputs live only on
+> the rented machine and are lost when it is shut down (the 60GB model is
+> re-downloaded into the HF cache). None of it is in the repo — treat it as
+> reproducible build output. To start fresh on a new box: `bash scripts/setup.sh`,
+> re-run the data prep (`prepare_data.sh` / `prepare_data_muse_glimmer.sh`),
+> then train + eval. The cache for the full 1.3M-row dataset is TB-scale; use a
+> sample slice for validation.
 
 See [DESIGN.md](DESIGN.md) for architecture, cache sizing, and verification
 status.
