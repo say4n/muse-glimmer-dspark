@@ -13,6 +13,21 @@ This is a fork of [deepseek-ai/DeepSpec](https://github.com/deepseek-ai/DeepSpec
 > size, and layer count. This repo **trains a fresh DSpark drafter against
 > Muse-Glimmer** instead. See [DESIGN.md](DESIGN.md) for details.
 
+## Status (early validation)
+
+End-to-end pipeline works on GPU: data → regen → target cache → train →
+checkpoint → speculative eval. Highlights from the first run (4591-sample
+slice, ~400 steps; see [RESULTS.md](RESULTS.md)):
+
+- Drafter trains cleanly; loss 13.2 → 2.39 over 400 steps
+- Acceptance length ~1.15 and first-token accept rate ~13% — above the
+  no-speculation baseline (1.0), but far from production (1 partial epoch)
+- **Confidence head is learning**: acceptance-prediction AUC 0.75–0.85 across
+  gsm8k / math500 / aime25 / humaneval
+
+Artifacts (checkpoints, regen data, eval results) are mirrored on Hugging Face:
+[`say4n/muse-glimmer-dspark-10k`](https://huggingface.co/say4n/muse-glimmer-dspark-10k).
+
 ## Setup
 
 On a fresh GPU box (Linux/CUDA):
