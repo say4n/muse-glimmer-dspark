@@ -8,7 +8,9 @@
 # Env: REPO_DIR, CACHE_DIR, EPOCHS
 set -euo pipefail
 
-REPO_DIR=${REPO_DIR:-/workspace/muse-glimmer-dspark}
+# Infer repo root from this script's location: <repo>/scripts/learn/..
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_DIR=${REPO_DIR:-"$(cd "${SCRIPT_DIR}/../.." && pwd)"}
 CACHE_DIR=${CACHE_DIR:-}
 EPOCHS=${EPOCHS:-5}
 

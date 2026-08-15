@@ -9,7 +9,9 @@
 # Env: REPO_DIR, DATA_ROOT, NUM_SAMPLES, MAX_LENGTH
 set -euo pipefail
 
-REPO_DIR=${REPO_DIR:-/workspace/muse-glimmer-dspark}
+# Infer repo root from this script's location: <repo>/scripts/learn/..
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_DIR=${REPO_DIR:-"$(cd "${SCRIPT_DIR}/../.." && pwd)"}
 DATA_ROOT=${DATA_ROOT:-${REPO_DIR}/train_datasets}
 NUM_SAMPLES=${NUM_SAMPLES:-500}
 MAX_LENGTH=${MAX_LENGTH:-2048}

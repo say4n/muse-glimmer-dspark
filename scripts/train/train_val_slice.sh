@@ -7,6 +7,10 @@
 #     the backward pass even when there appears to be free VRAM
 set -euo pipefail
 
+# Infer repo root from this script's location: <repo>/scripts/train/..
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_DIR=${REPO_DIR:-"$(cd "${SCRIPT_DIR}/../.." && pwd)"}
+
 # Some hosts fail to bind the default TCPStore address in init_dist; set the
 # distributed env explicitly (single-node, single-GPU defaults).
 export MASTER_ADDR=${MASTER_ADDR:-127.0.0.1}
@@ -14,7 +18,7 @@ export MASTER_PORT=${MASTER_PORT:-29500}
 export RANK=${RANK:-0}
 export WORLD_SIZE=${WORLD_SIZE:-1}
 
-cache_dir=${cache_dir:-${HOME}/muse-glimmer-dspark/cache_val}
+cache_dir=${cache_dir:-${REPO_DIR}/cache_val}
 
 PYTORCH_ALLOC_CONF=expandable_segments:True uv run python train.py \
     --config config/dspark/dspark_muse_glimmer_30b.py \

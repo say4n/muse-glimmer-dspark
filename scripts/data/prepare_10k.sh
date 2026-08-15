@@ -10,7 +10,9 @@
 #      MAX_LENGTH (cache token cap; cache size scales ~linearly with this).
 set -euo pipefail
 
-REPO_DIR=${REPO_DIR:-/workspace/muse-glimmer-dspark}
+# Infer repo root from this script's location: <repo>/scripts/data/..
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_DIR=${REPO_DIR:-"$(cd "${SCRIPT_DIR}/../.." && pwd)"}
 DATA_ROOT=${DATA_ROOT:-${REPO_DIR}/train_datasets}
 NUM_SAMPLES=${NUM_SAMPLES:-10000}
 NUM_WORKERS=${NUM_WORKERS:-1}
